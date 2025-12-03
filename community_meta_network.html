@@ -2,204 +2,10 @@
     <head>
         <meta charset="utf-8">
         
-            <script>function neighbourhoodHighlight(params) {
-  // console.log("in nieghbourhoodhighlight");
-  allNodes = nodes.get({ returnType: "Object" });
-  // originalNodes = JSON.parse(JSON.stringify(allNodes));
-  // if something is selected:
-  if (params.nodes.length > 0) {
-    highlightActive = true;
-    var i, j;
-    var selectedNode = params.nodes[0];
-    var degrees = 2;
-
-    // mark all nodes as hard to read.
-    for (let nodeId in allNodes) {
-      // nodeColors[nodeId] = allNodes[nodeId].color;
-      allNodes[nodeId].color = "rgba(200,200,200,0.5)";
-      if (allNodes[nodeId].hiddenLabel === undefined) {
-        allNodes[nodeId].hiddenLabel = allNodes[nodeId].label;
-        allNodes[nodeId].label = undefined;
-      }
-    }
-    var connectedNodes = network.getConnectedNodes(selectedNode);
-    var allConnectedNodes = [];
-
-    // get the second degree nodes
-    for (i = 1; i < degrees; i++) {
-      for (j = 0; j < connectedNodes.length; j++) {
-        allConnectedNodes = allConnectedNodes.concat(
-          network.getConnectedNodes(connectedNodes[j])
-        );
-      }
-    }
-
-    // all second degree nodes get a different color and their label back
-    for (i = 0; i < allConnectedNodes.length; i++) {
-      // allNodes[allConnectedNodes[i]].color = "pink";
-      allNodes[allConnectedNodes[i]].color = "rgba(150,150,150,0.75)";
-      if (allNodes[allConnectedNodes[i]].hiddenLabel !== undefined) {
-        allNodes[allConnectedNodes[i]].label =
-          allNodes[allConnectedNodes[i]].hiddenLabel;
-        allNodes[allConnectedNodes[i]].hiddenLabel = undefined;
-      }
-    }
-
-    // all first degree nodes get their own color and their label back
-    for (i = 0; i < connectedNodes.length; i++) {
-      // allNodes[connectedNodes[i]].color = undefined;
-      allNodes[connectedNodes[i]].color = nodeColors[connectedNodes[i]];
-      if (allNodes[connectedNodes[i]].hiddenLabel !== undefined) {
-        allNodes[connectedNodes[i]].label =
-          allNodes[connectedNodes[i]].hiddenLabel;
-        allNodes[connectedNodes[i]].hiddenLabel = undefined;
-      }
-    }
-
-    // the main node gets its own color and its label back.
-    // allNodes[selectedNode].color = undefined;
-    allNodes[selectedNode].color = nodeColors[selectedNode];
-    if (allNodes[selectedNode].hiddenLabel !== undefined) {
-      allNodes[selectedNode].label = allNodes[selectedNode].hiddenLabel;
-      allNodes[selectedNode].hiddenLabel = undefined;
-    }
-  } else if (highlightActive === true) {
-    // console.log("highlightActive was true");
-    // reset all nodes
-    for (let nodeId in allNodes) {
-      // allNodes[nodeId].color = "purple";
-      allNodes[nodeId].color = nodeColors[nodeId];
-      // delete allNodes[nodeId].color;
-      if (allNodes[nodeId].hiddenLabel !== undefined) {
-        allNodes[nodeId].label = allNodes[nodeId].hiddenLabel;
-        allNodes[nodeId].hiddenLabel = undefined;
-      }
-    }
-    highlightActive = false;
-  }
-
-  // transform the object into an array
-  var updateArray = [];
-  if (params.nodes.length > 0) {
-    for (let nodeId in allNodes) {
-      if (allNodes.hasOwnProperty(nodeId)) {
-        // console.log(allNodes[nodeId]);
-        updateArray.push(allNodes[nodeId]);
-      }
-    }
-    nodes.update(updateArray);
-  } else {
-    // console.log("Nothing was selected");
-    for (let nodeId in allNodes) {
-      if (allNodes.hasOwnProperty(nodeId)) {
-        // console.log(allNodes[nodeId]);
-        // allNodes[nodeId].color = {};
-        updateArray.push(allNodes[nodeId]);
-      }
-    }
-    nodes.update(updateArray);
-  }
-}
-
-function filterHighlight(params) {
-  allNodes = nodes.get({ returnType: "Object" });
-  // if something is selected:
-  if (params.nodes.length > 0) {
-    filterActive = true;
-    let selectedNodes = params.nodes;
-
-    // hiding all nodes and saving the label
-    for (let nodeId in allNodes) {
-      allNodes[nodeId].hidden = true;
-      if (allNodes[nodeId].savedLabel === undefined) {
-        allNodes[nodeId].savedLabel = allNodes[nodeId].label;
-        allNodes[nodeId].label = undefined;
-      }
-    }
-
-    for (let i=0; i < selectedNodes.length; i++) {
-      allNodes[selectedNodes[i]].hidden = false;
-      if (allNodes[selectedNodes[i]].savedLabel !== undefined) {
-        allNodes[selectedNodes[i]].label = allNodes[selectedNodes[i]].savedLabel;
-        allNodes[selectedNodes[i]].savedLabel = undefined;
-      }
-    }
-
-  } else if (filterActive === true) {
-    // reset all nodes
-    for (let nodeId in allNodes) {
-      allNodes[nodeId].hidden = false;
-      if (allNodes[nodeId].savedLabel !== undefined) {
-        allNodes[nodeId].label = allNodes[nodeId].savedLabel;
-        allNodes[nodeId].savedLabel = undefined;
-      }
-    }
-    filterActive = false;
-  }
-
-  // transform the object into an array
-  var updateArray = [];
-  if (params.nodes.length > 0) {
-    for (let nodeId in allNodes) {
-      if (allNodes.hasOwnProperty(nodeId)) {
-        updateArray.push(allNodes[nodeId]);
-      }
-    }
-    nodes.update(updateArray);
-  } else {
-    for (let nodeId in allNodes) {
-      if (allNodes.hasOwnProperty(nodeId)) {
-        updateArray.push(allNodes[nodeId]);
-      }
-    }
-    nodes.update(updateArray);
-  }
-}
-
-function selectNode(nodes) {
-  network.selectNodes(nodes);
-  neighbourhoodHighlight({ nodes: nodes });
-  return nodes;
-}
-
-function selectNodes(nodes) {
-  network.selectNodes(nodes);
-  filterHighlight({nodes: nodes});
-  return nodes;
-}
-
-function highlightFilter(filter) {
-  let selectedNodes = []
-  let selectedProp = filter['property']
-  if (filter['item'] === 'node') {
-    let allNodes = nodes.get({ returnType: "Object" });
-    for (let nodeId in allNodes) {
-      if (allNodes[nodeId][selectedProp] && filter['value'].includes((allNodes[nodeId][selectedProp]).toString())) {
-        selectedNodes.push(nodeId)
-      }
-    }
-  }
-  else if (filter['item'] === 'edge'){
-    let allEdges = edges.get({returnType: 'object'});
-    // check if the selected property exists for selected edge and select the nodes connected to the edge
-    for (let edge in allEdges) {
-      if (allEdges[edge][selectedProp] && filter['value'].includes((allEdges[edge][selectedProp]).toString())) {
-        selectedNodes.push(allEdges[edge]['from'])
-        selectedNodes.push(allEdges[edge]['to'])
-      }
-    }
-  }
-  selectNodes(selectedNodes)
-}</script>
+            <script src="lib/bindings/utils.js"></script>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
             <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
             
-            
-            
-            
-            
-            
-
         
 <center>
 <h1></h1>
@@ -228,7 +34,7 @@ function highlightFilter(filter) {
              #mynetwork {
                  width: 100%;
                  height: 700px;
-                 background-color: #222222;
+                 background-color: #FFFFFF;
                  border: 1px solid lightgray;
                  position: relative;
                  float: left;
@@ -282,7 +88,7 @@ function highlightFilter(filter) {
                   
 
                   // parsing and collecting nodes and edges from the python
-                  nodes = new vis.DataSet([{"color": "#e64545", "font": {"color": "white"}, "id": 0, "label": "0", "shape": "dot", "title": "Community 0, size 13", "value": 13}, {"color": "#e65145", "font": {"color": "white"}, "id": 1, "label": "1", "shape": "dot", "title": "Community 1, size 1687", "value": 1687}, {"color": "#e65d45", "font": {"color": "white"}, "id": 2, "label": "2", "shape": "dot", "title": "Community 2, size 12", "value": 12}, {"color": "#e66945", "font": {"color": "white"}, "id": 3, "label": "3", "shape": "dot", "title": "Community 3, size 6", "value": 6}, {"color": "#e67645", "font": {"color": "white"}, "id": 4, "label": "4", "shape": "dot", "title": "Community 4, size 38", "value": 38}, {"color": "#e68245", "font": {"color": "white"}, "id": 5, "label": "5", "shape": "dot", "title": "Community 5, size 9", "value": 9}, {"color": "#e68e45", "font": {"color": "white"}, "id": 6, "label": "6", "shape": "dot", "title": "Community 6, size 92", "value": 92}, {"color": "#e69a45", "font": {"color": "white"}, "id": 7, "label": "7", "shape": "dot", "title": "Community 7, size 99", "value": 99}, {"color": "#e6a645", "font": {"color": "white"}, "id": 8, "label": "8", "shape": "dot", "title": "Community 8, size 1534", "value": 1534}, {"color": "#e6b345", "font": {"color": "white"}, "id": 9, "label": "9", "shape": "dot", "title": "Community 9, size 5", "value": 5}, {"color": "#e6bf45", "font": {"color": "white"}, "id": 10, "label": "10", "shape": "dot", "title": "Community 10, size 1155", "value": 1155}, {"color": "#e6cb45", "font": {"color": "white"}, "id": 11, "label": "11", "shape": "dot", "title": "Community 11, size 511", "value": 511}, {"color": "#e6d745", "font": {"color": "white"}, "id": 12, "label": "12", "shape": "dot", "title": "Community 12, size 12", "value": 12}, {"color": "#e6e345", "font": {"color": "white"}, "id": 13, "label": "13", "shape": "dot", "title": "Community 13, size 6", "value": 6}, {"color": "#dbe645", "font": {"color": "white"}, "id": 14, "label": "14", "shape": "dot", "title": "Community 14, size 53", "value": 53}, {"color": "#cfe645", "font": {"color": "white"}, "id": 15, "label": "15", "shape": "dot", "title": "Community 15, size 8", "value": 8}, {"color": "#c3e645", "font": {"color": "white"}, "id": 16, "label": "16", "shape": "dot", "title": "Community 16, size 16", "value": 16}, {"color": "#b7e645", "font": {"color": "white"}, "id": 17, "label": "17", "shape": "dot", "title": "Community 17, size 121", "value": 121}, {"color": "#abe645", "font": {"color": "white"}, "id": 18, "label": "18", "shape": "dot", "title": "Community 18, size 1498", "value": 1498}, {"color": "#9ee645", "font": {"color": "white"}, "id": 19, "label": "19", "shape": "dot", "title": "Community 19, size 28", "value": 28}, {"color": "#92e645", "font": {"color": "white"}, "id": 20, "label": "20", "shape": "dot", "title": "Community 20, size 7", "value": 7}, {"color": "#86e645", "font": {"color": "white"}, "id": 21, "label": "21", "shape": "dot", "title": "Community 21, size 322", "value": 322}, {"color": "#7ae645", "font": {"color": "white"}, "id": 22, "label": "22", "shape": "dot", "title": "Community 22, size 7", "value": 7}, {"color": "#6ee645", "font": {"color": "white"}, "id": 23, "label": "23", "shape": "dot", "title": "Community 23, size 13", "value": 13}, {"color": "#61e645", "font": {"color": "white"}, "id": 24, "label": "24", "shape": "dot", "title": "Community 24, size 51", "value": 51}, {"color": "#55e645", "font": {"color": "white"}, "id": 25, "label": "25", "shape": "dot", "title": "Community 25, size 64", "value": 64}, {"color": "#49e645", "font": {"color": "white"}, "id": 26, "label": "26", "shape": "dot", "title": "Community 26, size 7", "value": 7}, {"color": "#45e64d", "font": {"color": "white"}, "id": 27, "label": "27", "shape": "dot", "title": "Community 27, size 7", "value": 7}, {"color": "#45e659", "font": {"color": "white"}, "id": 28, "label": "28", "shape": "dot", "title": "Community 28, size 204", "value": 204}, {"color": "#45e665", "font": {"color": "white"}, "id": 29, "label": "29", "shape": "dot", "title": "Community 29, size 6", "value": 6}, {"color": "#45e672", "font": {"color": "white"}, "id": 30, "label": "30", "shape": "dot", "title": "Community 30, size 6", "value": 6}, {"color": "#45e67e", "font": {"color": "white"}, "id": 31, "label": "31", "shape": "dot", "title": "Community 31, size 70", "value": 70}, {"color": "#45e68a", "font": {"color": "white"}, "id": 32, "label": "32", "shape": "dot", "title": "Community 32, size 1631", "value": 1631}, {"color": "#45e696", "font": {"color": "white"}, "id": 33, "label": "33", "shape": "dot", "title": "Community 33, size 6", "value": 6}, {"color": "#45e6a2", "font": {"color": "white"}, "id": 34, "label": "34", "shape": "dot", "title": "Community 34, size 180", "value": 180}, {"color": "#45e6af", "font": {"color": "white"}, "id": 35, "label": "35", "shape": "dot", "title": "Community 35, size 116", "value": 116}, {"color": "#45e6bb", "font": {"color": "white"}, "id": 36, "label": "36", "shape": "dot", "title": "Community 36, size 12", "value": 12}, {"color": "#45e6c7", "font": {"color": "white"}, "id": 37, "label": "37", "shape": "dot", "title": "Community 37, size 6", "value": 6}, {"color": "#45e6d3", "font": {"color": "white"}, "id": 38, "label": "38", "shape": "dot", "title": "Community 38, size 9", "value": 9}, {"color": "#45e6df", "font": {"color": "white"}, "id": 39, "label": "39", "shape": "dot", "title": "Community 39, size 33", "value": 33}, {"color": "#45dfe6", "font": {"color": "white"}, "id": 40, "label": "40", "shape": "dot", "title": "Community 40, size 7", "value": 7}, {"color": "#45d3e6", "font": {"color": "white"}, "id": 41, "label": "41", "shape": "dot", "title": "Community 41, size 7", "value": 7}, {"color": "#45c7e6", "font": {"color": "white"}, "id": 42, "label": "42", "shape": "dot", "title": "Community 42, size 6", "value": 6}, {"color": "#45bbe6", "font": {"color": "white"}, "id": 43, "label": "43", "shape": "dot", "title": "Community 43, size 7", "value": 7}, {"color": "#45afe6", "font": {"color": "white"}, "id": 44, "label": "44", "shape": "dot", "title": "Community 44, size 11", "value": 11}, {"color": "#45a2e6", "font": {"color": "white"}, "id": 45, "label": "45", "shape": "dot", "title": "Community 45, size 6", "value": 6}, {"color": "#4596e6", "font": {"color": "white"}, "id": 46, "label": "46", "shape": "dot", "title": "Community 46, size 8", "value": 8}, {"color": "#458ae6", "font": {"color": "white"}, "id": 47, "label": "47", "shape": "dot", "title": "Community 47, size 8", "value": 8}, {"color": "#457ee6", "font": {"color": "white"}, "id": 48, "label": "48", "shape": "dot", "title": "Community 48, size 6", "value": 6}, {"color": "#4572e6", "font": {"color": "white"}, "id": 49, "label": "49", "shape": "dot", "title": "Community 49, size 7", "value": 7}, {"color": "#4565e6", "font": {"color": "white"}, "id": 50, "label": "50", "shape": "dot", "title": "Community 50, size 10", "value": 10}, {"color": "#4559e6", "font": {"color": "white"}, "id": 51, "label": "51", "shape": "dot", "title": "Community 51, size 17", "value": 17}, {"color": "#454de6", "font": {"color": "white"}, "id": 52, "label": "52", "shape": "dot", "title": "Community 52, size 80", "value": 80}, {"color": "#4945e6", "font": {"color": "white"}, "id": 53, "label": "53", "shape": "dot", "title": "Community 53, size 6", "value": 6}, {"color": "#5545e6", "font": {"color": "white"}, "id": 54, "label": "54", "shape": "dot", "title": "Community 54, size 6", "value": 6}, {"color": "#6145e6", "font": {"color": "white"}, "id": 55, "label": "55", "shape": "dot", "title": "Community 55, size 27", "value": 27}, {"color": "#6e45e6", "font": {"color": "white"}, "id": 56, "label": "56", "shape": "dot", "title": "Community 56, size 961", "value": 961}, {"color": "#7a45e6", "font": {"color": "white"}, "id": 57, "label": "57", "shape": "dot", "title": "Community 57, size 10", "value": 10}, {"color": "#8645e6", "font": {"color": "white"}, "id": 58, "label": "58", "shape": "dot", "title": "Community 58, size 347", "value": 347}, {"color": "#9245e6", "font": {"color": "white"}, "id": 59, "label": "59", "shape": "dot", "title": "Community 59, size 11", "value": 11}, {"color": "#9e45e6", "font": {"color": "white"}, "id": 60, "label": "60", "shape": "dot", "title": "Community 60, size 10", "value": 10}, {"color": "#ab45e6", "font": {"color": "white"}, "id": 61, "label": "61", "shape": "dot", "title": "Community 61, size 19", "value": 19}, {"color": "#b745e6", "font": {"color": "white"}, "id": 62, "label": "62", "shape": "dot", "title": "Community 62, size 6", "value": 6}, {"color": "#c345e6", "font": {"color": "white"}, "id": 63, "label": "63", "shape": "dot", "title": "Community 63, size 7", "value": 7}, {"color": "#cf45e6", "font": {"color": "white"}, "id": 64, "label": "64", "shape": "dot", "title": "Community 64, size 6", "value": 6}, {"color": "#db45e6", "font": {"color": "white"}, "id": 65, "label": "65", "shape": "dot", "title": "Community 65, size 9", "value": 9}, {"color": "#e645e3", "font": {"color": "white"}, "id": 66, "label": "66", "shape": "dot", "title": "Community 66, size 8", "value": 8}, {"color": "#e645d7", "font": {"color": "white"}, "id": 67, "label": "67", "shape": "dot", "title": "Community 67, size 6", "value": 6}, {"color": "#e645cb", "font": {"color": "white"}, "id": 68, "label": "68", "shape": "dot", "title": "Community 68, size 6", "value": 6}, {"color": "#e645bf", "font": {"color": "white"}, "id": 69, "label": "69", "shape": "dot", "title": "Community 69, size 26", "value": 26}, {"color": "#e645b3", "font": {"color": "white"}, "id": 70, "label": "70", "shape": "dot", "title": "Community 70, size 146", "value": 146}, {"color": "#e645a6", "font": {"color": "white"}, "id": 71, "label": "71", "shape": "dot", "title": "Community 71, size 8", "value": 8}, {"color": "#e6459a", "font": {"color": "white"}, "id": 72, "label": "72", "shape": "dot", "title": "Community 72, size 8", "value": 8}, {"color": "#e6458e", "font": {"color": "white"}, "id": 73, "label": "73", "shape": "dot", "title": "Community 73, size 14", "value": 14}, {"color": "#e64582", "font": {"color": "white"}, "id": 74, "label": "74", "shape": "dot", "title": "Community 74, size 9", "value": 9}, {"color": "#e64576", "font": {"color": "white"}, "id": 75, "label": "75", "shape": "dot", "title": "Community 75, size 21", "value": 21}, {"color": "#e64569", "font": {"color": "white"}, "id": 76, "label": "76", "shape": "dot", "title": "Community 76, size 6", "value": 6}, {"color": "#e6455d", "font": {"color": "white"}, "id": 77, "label": "77", "shape": "dot", "title": "Community 77, size 6", "value": 6}, {"color": "#e64551", "font": {"color": "white"}, "id": 78, "label": "78", "shape": "dot", "title": "Community 78, size 9", "value": 9}]);
+                  nodes = new vis.DataSet([{"color": "#e64545", "font": {"color": "black"}, "id": 0, "label": "0", "shape": "dot", "title": "Community 0, size 13", "value": 13}, {"color": "#e65145", "font": {"color": "black"}, "id": 1, "label": "1", "shape": "dot", "title": "Community 1, size 1687", "value": 1687}, {"color": "#e65d45", "font": {"color": "black"}, "id": 2, "label": "2", "shape": "dot", "title": "Community 2, size 12", "value": 12}, {"color": "#e66945", "font": {"color": "black"}, "id": 3, "label": "3", "shape": "dot", "title": "Community 3, size 6", "value": 6}, {"color": "#e67645", "font": {"color": "black"}, "id": 4, "label": "4", "shape": "dot", "title": "Community 4, size 38", "value": 38}, {"color": "#e68245", "font": {"color": "black"}, "id": 5, "label": "5", "shape": "dot", "title": "Community 5, size 9", "value": 9}, {"color": "#e68e45", "font": {"color": "black"}, "id": 6, "label": "6", "shape": "dot", "title": "Community 6, size 92", "value": 92}, {"color": "#e69a45", "font": {"color": "black"}, "id": 7, "label": "7", "shape": "dot", "title": "Community 7, size 99", "value": 99}, {"color": "#e6a645", "font": {"color": "black"}, "id": 8, "label": "8", "shape": "dot", "title": "Community 8, size 1534", "value": 1534}, {"color": "#e6b345", "font": {"color": "black"}, "id": 9, "label": "9", "shape": "dot", "title": "Community 9, size 5", "value": 5}, {"color": "#e6bf45", "font": {"color": "black"}, "id": 10, "label": "10", "shape": "dot", "title": "Community 10, size 1155", "value": 1155}, {"color": "#e6cb45", "font": {"color": "black"}, "id": 11, "label": "11", "shape": "dot", "title": "Community 11, size 511", "value": 511}, {"color": "#e6d745", "font": {"color": "black"}, "id": 12, "label": "12", "shape": "dot", "title": "Community 12, size 12", "value": 12}, {"color": "#e6e345", "font": {"color": "black"}, "id": 13, "label": "13", "shape": "dot", "title": "Community 13, size 6", "value": 6}, {"color": "#dbe645", "font": {"color": "black"}, "id": 14, "label": "14", "shape": "dot", "title": "Community 14, size 53", "value": 53}, {"color": "#cfe645", "font": {"color": "black"}, "id": 15, "label": "15", "shape": "dot", "title": "Community 15, size 8", "value": 8}, {"color": "#c3e645", "font": {"color": "black"}, "id": 16, "label": "16", "shape": "dot", "title": "Community 16, size 16", "value": 16}, {"color": "#b7e645", "font": {"color": "black"}, "id": 17, "label": "17", "shape": "dot", "title": "Community 17, size 121", "value": 121}, {"color": "#abe645", "font": {"color": "black"}, "id": 18, "label": "18", "shape": "dot", "title": "Community 18, size 1498", "value": 1498}, {"color": "#9ee645", "font": {"color": "black"}, "id": 19, "label": "19", "shape": "dot", "title": "Community 19, size 28", "value": 28}, {"color": "#92e645", "font": {"color": "black"}, "id": 20, "label": "20", "shape": "dot", "title": "Community 20, size 7", "value": 7}, {"color": "#86e645", "font": {"color": "black"}, "id": 21, "label": "21", "shape": "dot", "title": "Community 21, size 322", "value": 322}, {"color": "#7ae645", "font": {"color": "black"}, "id": 22, "label": "22", "shape": "dot", "title": "Community 22, size 7", "value": 7}, {"color": "#6ee645", "font": {"color": "black"}, "id": 23, "label": "23", "shape": "dot", "title": "Community 23, size 13", "value": 13}, {"color": "#61e645", "font": {"color": "black"}, "id": 24, "label": "24", "shape": "dot", "title": "Community 24, size 51", "value": 51}, {"color": "#55e645", "font": {"color": "black"}, "id": 25, "label": "25", "shape": "dot", "title": "Community 25, size 64", "value": 64}, {"color": "#49e645", "font": {"color": "black"}, "id": 26, "label": "26", "shape": "dot", "title": "Community 26, size 7", "value": 7}, {"color": "#45e64d", "font": {"color": "black"}, "id": 27, "label": "27", "shape": "dot", "title": "Community 27, size 7", "value": 7}, {"color": "#45e659", "font": {"color": "black"}, "id": 28, "label": "28", "shape": "dot", "title": "Community 28, size 204", "value": 204}, {"color": "#45e665", "font": {"color": "black"}, "id": 29, "label": "29", "shape": "dot", "title": "Community 29, size 6", "value": 6}, {"color": "#45e672", "font": {"color": "black"}, "id": 30, "label": "30", "shape": "dot", "title": "Community 30, size 6", "value": 6}, {"color": "#45e67e", "font": {"color": "black"}, "id": 31, "label": "31", "shape": "dot", "title": "Community 31, size 70", "value": 70}, {"color": "#45e68a", "font": {"color": "black"}, "id": 32, "label": "32", "shape": "dot", "title": "Community 32, size 1631", "value": 1631}, {"color": "#45e696", "font": {"color": "black"}, "id": 33, "label": "33", "shape": "dot", "title": "Community 33, size 6", "value": 6}, {"color": "#45e6a2", "font": {"color": "black"}, "id": 34, "label": "34", "shape": "dot", "title": "Community 34, size 180", "value": 180}, {"color": "#45e6af", "font": {"color": "black"}, "id": 35, "label": "35", "shape": "dot", "title": "Community 35, size 116", "value": 116}, {"color": "#45e6bb", "font": {"color": "black"}, "id": 36, "label": "36", "shape": "dot", "title": "Community 36, size 12", "value": 12}, {"color": "#45e6c7", "font": {"color": "black"}, "id": 37, "label": "37", "shape": "dot", "title": "Community 37, size 6", "value": 6}, {"color": "#45e6d3", "font": {"color": "black"}, "id": 38, "label": "38", "shape": "dot", "title": "Community 38, size 9", "value": 9}, {"color": "#45e6df", "font": {"color": "black"}, "id": 39, "label": "39", "shape": "dot", "title": "Community 39, size 33", "value": 33}, {"color": "#45dfe6", "font": {"color": "black"}, "id": 40, "label": "40", "shape": "dot", "title": "Community 40, size 7", "value": 7}, {"color": "#45d3e6", "font": {"color": "black"}, "id": 41, "label": "41", "shape": "dot", "title": "Community 41, size 7", "value": 7}, {"color": "#45c7e6", "font": {"color": "black"}, "id": 42, "label": "42", "shape": "dot", "title": "Community 42, size 6", "value": 6}, {"color": "#45bbe6", "font": {"color": "black"}, "id": 43, "label": "43", "shape": "dot", "title": "Community 43, size 7", "value": 7}, {"color": "#45afe6", "font": {"color": "black"}, "id": 44, "label": "44", "shape": "dot", "title": "Community 44, size 11", "value": 11}, {"color": "#45a2e6", "font": {"color": "black"}, "id": 45, "label": "45", "shape": "dot", "title": "Community 45, size 6", "value": 6}, {"color": "#4596e6", "font": {"color": "black"}, "id": 46, "label": "46", "shape": "dot", "title": "Community 46, size 8", "value": 8}, {"color": "#458ae6", "font": {"color": "black"}, "id": 47, "label": "47", "shape": "dot", "title": "Community 47, size 8", "value": 8}, {"color": "#457ee6", "font": {"color": "black"}, "id": 48, "label": "48", "shape": "dot", "title": "Community 48, size 6", "value": 6}, {"color": "#4572e6", "font": {"color": "black"}, "id": 49, "label": "49", "shape": "dot", "title": "Community 49, size 7", "value": 7}, {"color": "#4565e6", "font": {"color": "black"}, "id": 50, "label": "50", "shape": "dot", "title": "Community 50, size 10", "value": 10}, {"color": "#4559e6", "font": {"color": "black"}, "id": 51, "label": "51", "shape": "dot", "title": "Community 51, size 17", "value": 17}, {"color": "#454de6", "font": {"color": "black"}, "id": 52, "label": "52", "shape": "dot", "title": "Community 52, size 80", "value": 80}, {"color": "#4945e6", "font": {"color": "black"}, "id": 53, "label": "53", "shape": "dot", "title": "Community 53, size 6", "value": 6}, {"color": "#5545e6", "font": {"color": "black"}, "id": 54, "label": "54", "shape": "dot", "title": "Community 54, size 6", "value": 6}, {"color": "#6145e6", "font": {"color": "black"}, "id": 55, "label": "55", "shape": "dot", "title": "Community 55, size 27", "value": 27}, {"color": "#6e45e6", "font": {"color": "black"}, "id": 56, "label": "56", "shape": "dot", "title": "Community 56, size 961", "value": 961}, {"color": "#7a45e6", "font": {"color": "black"}, "id": 57, "label": "57", "shape": "dot", "title": "Community 57, size 10", "value": 10}, {"color": "#8645e6", "font": {"color": "black"}, "id": 58, "label": "58", "shape": "dot", "title": "Community 58, size 347", "value": 347}, {"color": "#9245e6", "font": {"color": "black"}, "id": 59, "label": "59", "shape": "dot", "title": "Community 59, size 11", "value": 11}, {"color": "#9e45e6", "font": {"color": "black"}, "id": 60, "label": "60", "shape": "dot", "title": "Community 60, size 10", "value": 10}, {"color": "#ab45e6", "font": {"color": "black"}, "id": 61, "label": "61", "shape": "dot", "title": "Community 61, size 19", "value": 19}, {"color": "#b745e6", "font": {"color": "black"}, "id": 62, "label": "62", "shape": "dot", "title": "Community 62, size 6", "value": 6}, {"color": "#c345e6", "font": {"color": "black"}, "id": 63, "label": "63", "shape": "dot", "title": "Community 63, size 7", "value": 7}, {"color": "#cf45e6", "font": {"color": "black"}, "id": 64, "label": "64", "shape": "dot", "title": "Community 64, size 6", "value": 6}, {"color": "#db45e6", "font": {"color": "black"}, "id": 65, "label": "65", "shape": "dot", "title": "Community 65, size 9", "value": 9}, {"color": "#e645e3", "font": {"color": "black"}, "id": 66, "label": "66", "shape": "dot", "title": "Community 66, size 8", "value": 8}, {"color": "#e645d7", "font": {"color": "black"}, "id": 67, "label": "67", "shape": "dot", "title": "Community 67, size 6", "value": 6}, {"color": "#e645cb", "font": {"color": "black"}, "id": 68, "label": "68", "shape": "dot", "title": "Community 68, size 6", "value": 6}, {"color": "#e645bf", "font": {"color": "black"}, "id": 69, "label": "69", "shape": "dot", "title": "Community 69, size 26", "value": 26}, {"color": "#e645b3", "font": {"color": "black"}, "id": 70, "label": "70", "shape": "dot", "title": "Community 70, size 146", "value": 146}, {"color": "#e645a6", "font": {"color": "black"}, "id": 71, "label": "71", "shape": "dot", "title": "Community 71, size 8", "value": 8}, {"color": "#e6459a", "font": {"color": "black"}, "id": 72, "label": "72", "shape": "dot", "title": "Community 72, size 8", "value": 8}, {"color": "#e6458e", "font": {"color": "black"}, "id": 73, "label": "73", "shape": "dot", "title": "Community 73, size 14", "value": 14}, {"color": "#e64582", "font": {"color": "black"}, "id": 74, "label": "74", "shape": "dot", "title": "Community 74, size 9", "value": 9}, {"color": "#e64576", "font": {"color": "black"}, "id": 75, "label": "75", "shape": "dot", "title": "Community 75, size 21", "value": 21}, {"color": "#e64569", "font": {"color": "black"}, "id": 76, "label": "76", "shape": "dot", "title": "Community 76, size 6", "value": 6}, {"color": "#e6455d", "font": {"color": "black"}, "id": 77, "label": "77", "shape": "dot", "title": "Community 77, size 6", "value": 6}, {"color": "#e64551", "font": {"color": "black"}, "id": 78, "label": "78", "shape": "dot", "title": "Community 78, size 9", "value": 9}]);
                   edges = new vis.DataSet([{"from": 0, "title": "Weight: 3", "to": 1, "value": 3}, {"from": 0, "title": "Weight: 1", "to": 18, "value": 1}, {"from": 0, "title": "Weight: 4", "to": 32, "value": 4}, {"from": 1, "title": "Weight: 5", "to": 2, "value": 5}, {"from": 1, "title": "Weight: 2", "to": 3, "value": 2}, {"from": 1, "title": "Weight: 5", "to": 4, "value": 5}, {"from": 1, "title": "Weight: 5", "to": 5, "value": 5}, {"from": 1, "title": "Weight: 165", "to": 6, "value": 165}, {"from": 1, "title": "Weight: 18", "to": 7, "value": 18}, {"from": 1, "title": "Weight: 4319", "to": 8, "value": 4319}, {"from": 1, "title": "Weight: 6", "to": 9, "value": 6}, {"from": 1, "title": "Weight: 1632", "to": 10, "value": 1632}, {"from": 1, "title": "Weight: 1512", "to": 11, "value": 1512}, {"from": 1, "title": "Weight: 4", "to": 13, "value": 4}, {"from": 1, "title": "Weight: 8", "to": 14, "value": 8}, {"from": 1, "title": "Weight: 9", "to": 15, "value": 9}, {"from": 1, "title": "Weight: 22", "to": 16, "value": 22}, {"from": 1, "title": "Weight: 48", "to": 17, "value": 48}, {"from": 1, "title": "Weight: 5576", "to": 18, "value": 5576}, {"from": 1, "title": "Weight: 5", "to": 19, "value": 5}, {"from": 1, "title": "Weight: 397", "to": 21, "value": 397}, {"from": 1, "title": "Weight: 2", "to": 22, "value": 2}, {"from": 1, "title": "Weight: 57", "to": 24, "value": 57}, {"from": 1, "title": "Weight: 101", "to": 25, "value": 101}, {"from": 1, "title": "Weight: 13", "to": 31, "value": 13}, {"from": 1, "title": "Weight: 3465", "to": 32, "value": 3465}, {"from": 1, "title": "Weight: 144", "to": 34, "value": 144}, {"from": 1, "title": "Weight: 1", "to": 38, "value": 1}, {"from": 1, "title": "Weight: 29", "to": 39, "value": 29}, {"from": 1, "title": "Weight: 6", "to": 40, "value": 6}, {"from": 1, "title": "Weight: 3", "to": 41, "value": 3}, {"from": 1, "title": "Weight: 22", "to": 44, "value": 22}, {"from": 1, "title": "Weight: 4", "to": 48, "value": 4}, {"from": 1, "title": "Weight: 3", "to": 49, "value": 3}, {"from": 1, "title": "Weight: 2", "to": 51, "value": 2}, {"from": 1, "title": "Weight: 33", "to": 52, "value": 33}, {"from": 1, "title": "Weight: 2216", "to": 56, "value": 2216}, {"from": 1, "title": "Weight: 3", "to": 57, "value": 3}, {"from": 1, "title": "Weight: 5", "to": 58, "value": 5}, {"from": 1, "title": "Weight: 4", "to": 59, "value": 4}, {"from": 1, "title": "Weight: 3", "to": 63, "value": 3}, {"from": 1, "title": "Weight: 4", "to": 64, "value": 4}, {"from": 1, "title": "Weight: 1", "to": 65, "value": 1}, {"from": 1, "title": "Weight: 1", "to": 66, "value": 1}, {"from": 1, "title": "Weight: 8", "to": 70, "value": 8}, {"from": 1, "title": "Weight: 1", "to": 74, "value": 1}, {"from": 1, "title": "Weight: 1", "to": 76, "value": 1}, {"from": 2, "title": "Weight: 6", "to": 8, "value": 6}, {"from": 2, "title": "Weight: 3", "to": 10, "value": 3}, {"from": 2, "title": "Weight: 5", "to": 18, "value": 5}, {"from": 2, "title": "Weight: 4", "to": 32, "value": 4}, {"from": 3, "title": "Weight: 1", "to": 10, "value": 1}, {"from": 3, "title": "Weight: 1", "to": 32, "value": 1}, {"from": 4, "title": "Weight: 1", "to": 8, "value": 1}, {"from": 4, "title": "Weight: 26", "to": 10, "value": 26}, {"from": 4, "title": "Weight: 11", "to": 18, "value": 11}, {"from": 4, "title": "Weight: 54", "to": 32, "value": 54}, {"from": 4, "title": "Weight: 2", "to": 56, "value": 2}, {"from": 5, "title": "Weight: 10", "to": 32, "value": 10}, {"from": 6, "title": "Weight: 24", "to": 8, "value": 24}, {"from": 6, "title": "Weight: 8", "to": 10, "value": 8}, {"from": 6, "title": "Weight: 14", "to": 11, "value": 14}, {"from": 6, "title": "Weight: 165", "to": 18, "value": 165}, {"from": 6, "title": "Weight: 7", "to": 21, "value": 7}, {"from": 6, "title": "Weight: 1", "to": 24, "value": 1}, {"from": 6, "title": "Weight: 3", "to": 25, "value": 3}, {"from": 6, "title": "Weight: 139", "to": 32, "value": 139}, {"from": 6, "title": "Weight: 89", "to": 56, "value": 89}, {"from": 7, "title": "Weight: 34", "to": 8, "value": 34}, {"from": 7, "title": "Weight: 6", "to": 10, "value": 6}, {"from": 7, "title": "Weight: 9", "to": 18, "value": 9}, {"from": 7, "title": "Weight: 29", "to": 32, "value": 29}, {"from": 7, "title": "Weight: 1", "to": 35, "value": 1}, {"from": 7, "title": "Weight: 13", "to": 58, "value": 13}, {"from": 7, "title": "Weight: 1", "to": 70, "value": 1}, {"from": 8, "title": "Weight: 5", "to": 9, "value": 5}, {"from": 8, "title": "Weight: 723", "to": 10, "value": 723}, {"from": 8, "title": "Weight: 341", "to": 11, "value": 341}, {"from": 8, "title": "Weight: 6", "to": 13, "value": 6}, {"from": 8, "title": "Weight: 24", "to": 14, "value": 24}, {"from": 8, "title": "Weight: 5", "to": 15, "value": 5}, {"from": 8, "title": "Weight: 1", "to": 16, "value": 1}, {"from": 8, "title": "Weight: 40", "to": 17, "value": 40}, {"from": 8, "title": "Weight: 2552", "to": 18, "value": 2552}, {"from": 8, "title": "Weight: 3", "to": 19, "value": 3}, {"from": 8, "title": "Weight: 224", "to": 21, "value": 224}, {"from": 8, "title": "Weight: 7", "to": 22, "value": 7}, {"from": 8, "title": "Weight: 6", "to": 23, "value": 6}, {"from": 8, "title": "Weight: 37", "to": 24, "value": 37}, {"from": 8, "title": "Weight: 33", "to": 25, "value": 33}, {"from": 8, "title": "Weight: 2", "to": 26, "value": 2}, {"from": 8, "title": "Weight: 1", "to": 27, "value": 1}, {"from": 8, "title": "Weight: 145", "to": 28, "value": 145}, {"from": 8, "title": "Weight: 2", "to": 29, "value": 2}, {"from": 8, "title": "Weight: 5", "to": 30, "value": 5}, {"from": 8, "title": "Weight: 20", "to": 31, "value": 20}, {"from": 8, "title": "Weight: 1518", "to": 32, "value": 1518}, {"from": 8, "title": "Weight: 12", "to": 34, "value": 12}, {"from": 8, "title": "Weight: 44", "to": 35, "value": 44}, {"from": 8, "title": "Weight: 15", "to": 39, "value": 15}, {"from": 8, "title": "Weight: 1", "to": 40, "value": 1}, {"from": 8, "title": "Weight: 4", "to": 41, "value": 4}, {"from": 8, "title": "Weight: 5", "to": 42, "value": 5}, {"from": 8, "title": "Weight: 1", "to": 43, "value": 1}, {"from": 8, "title": "Weight: 8", "to": 44, "value": 8}, {"from": 8, "title": "Weight: 1", "to": 46, "value": 1}, {"from": 8, "title": "Weight: 4", "to": 50, "value": 4}, {"from": 8, "title": "Weight: 14", "to": 52, "value": 14}, {"from": 8, "title": "Weight: 2", "to": 55, "value": 2}, {"from": 8, "title": "Weight: 2269", "to": 56, "value": 2269}, {"from": 8, "title": "Weight: 427", "to": 58, "value": 427}, {"from": 8, "title": "Weight: 11", "to": 61, "value": 11}, {"from": 8, "title": "Weight: 1", "to": 63, "value": 1}, {"from": 8, "title": "Weight: 2", "to": 64, "value": 2}, {"from": 8, "title": "Weight: 12", "to": 70, "value": 12}, {"from": 8, "title": "Weight: 2", "to": 73, "value": 2}, {"from": 9, "title": "Weight: 2", "to": 18, "value": 2}, {"from": 9, "title": "Weight: 4", "to": 32, "value": 4}, {"from": 9, "title": "Weight: 1", "to": 56, "value": 1}, {"from": 10, "title": "Weight: 210", "to": 11, "value": 210}, {"from": 10, "title": "Weight: 6", "to": 14, "value": 6}, {"from": 10, "title": "Weight: 4", "to": 15, "value": 4}, {"from": 10, "title": "Weight: 3", "to": 17, "value": 3}, {"from": 10, "title": "Weight: 526", "to": 18, "value": 526}, {"from": 10, "title": "Weight: 1", "to": 19, "value": 1}, {"from": 10, "title": "Weight: 229", "to": 21, "value": 229}, {"from": 10, "title": "Weight: 1", "to": 24, "value": 1}, {"from": 10, "title": "Weight: 62", "to": 25, "value": 62}, {"from": 10, "title": "Weight: 1", "to": 28, "value": 1}, {"from": 10, "title": "Weight: 1", "to": 31, "value": 1}, {"from": 10, "title": "Weight: 604", "to": 32, "value": 604}, {"from": 10, "title": "Weight: 1", "to": 34, "value": 1}, {"from": 10, "title": "Weight: 25", "to": 35, "value": 25}, {"from": 10, "title": "Weight: 6", "to": 36, "value": 6}, {"from": 10, "title": "Weight: 10", "to": 39, "value": 10}, {"from": 10, "title": "Weight: 1", "to": 42, "value": 1}, {"from": 10, "title": "Weight: 12", "to": 52, "value": 12}, {"from": 10, "title": "Weight: 1", "to": 55, "value": 1}, {"from": 10, "title": "Weight: 256", "to": 56, "value": 256}, {"from": 10, "title": "Weight: 82", "to": 58, "value": 82}, {"from": 10, "title": "Weight: 1", "to": 59, "value": 1}, {"from": 10, "title": "Weight: 1", "to": 60, "value": 1}, {"from": 10, "title": "Weight: 1", "to": 67, "value": 1}, {"from": 10, "title": "Weight: 1", "to": 69, "value": 1}, {"from": 10, "title": "Weight: 24", "to": 70, "value": 24}, {"from": 10, "title": "Weight: 1", "to": 71, "value": 1}, {"from": 10, "title": "Weight: 4", "to": 72, "value": 4}, {"from": 10, "title": "Weight: 1", "to": 74, "value": 1}, {"from": 10, "title": "Weight: 2", "to": 75, "value": 2}, {"from": 11, "title": "Weight: 1", "to": 14, "value": 1}, {"from": 11, "title": "Weight: 2", "to": 15, "value": 2}, {"from": 11, "title": "Weight: 4", "to": 17, "value": 4}, {"from": 11, "title": "Weight: 650", "to": 18, "value": 650}, {"from": 11, "title": "Weight: 32", "to": 21, "value": 32}, {"from": 11, "title": "Weight: 14", "to": 24, "value": 14}, {"from": 11, "title": "Weight: 2", "to": 25, "value": 2}, {"from": 11, "title": "Weight: 4", "to": 28, "value": 4}, {"from": 11, "title": "Weight: 589", "to": 32, "value": 589}, {"from": 11, "title": "Weight: 6", "to": 34, "value": 6}, {"from": 11, "title": "Weight: 1", "to": 39, "value": 1}, {"from": 11, "title": "Weight: 3", "to": 44, "value": 3}, {"from": 11, "title": "Weight: 5", "to": 52, "value": 5}, {"from": 11, "title": "Weight: 320", "to": 56, "value": 320}, {"from": 11, "title": "Weight: 3", "to": 58, "value": 3}, {"from": 11, "title": "Weight: 1", "to": 70, "value": 1}, {"from": 12, "title": "Weight: 1", "to": 18, "value": 1}, {"from": 13, "title": "Weight: 6", "to": 18, "value": 6}, {"from": 13, "title": "Weight: 1", "to": 32, "value": 1}, {"from": 14, "title": "Weight: 10", "to": 18, "value": 10}, {"from": 14, "title": "Weight: 74", "to": 32, "value": 74}, {"from": 14, "title": "Weight: 6", "to": 56, "value": 6}, {"from": 15, "title": "Weight: 3", "to": 32, "value": 3}, {"from": 15, "title": "Weight: 5", "to": 56, "value": 5}, {"from": 16, "title": "Weight: 2", "to": 18, "value": 2}, {"from": 17, "title": "Weight: 126", "to": 18, "value": 126}, {"from": 17, "title": "Weight: 1", "to": 21, "value": 1}, {"from": 17, "title": "Weight: 1", "to": 28, "value": 1}, {"from": 17, "title": "Weight: 15", "to": 32, "value": 15}, {"from": 17, "title": "Weight: 1", "to": 34, "value": 1}, {"from": 17, "title": "Weight: 1", "to": 52, "value": 1}, {"from": 17, "title": "Weight: 9", "to": 56, "value": 9}, {"from": 18, "title": "Weight: 4", "to": 20, "value": 4}, {"from": 18, "title": "Weight: 606", "to": 21, "value": 606}, {"from": 18, "title": "Weight: 7", "to": 22, "value": 7}, {"from": 18, "title": "Weight: 66", "to": 24, "value": 66}, {"from": 18, "title": "Weight: 35", "to": 25, "value": 35}, {"from": 18, "title": "Weight: 4278", "to": 32, "value": 4278}, {"from": 18, "title": "Weight: 8", "to": 34, "value": 8}, {"from": 18, "title": "Weight: 7", "to": 35, "value": 7}, {"from": 18, "title": "Weight: 2", "to": 37, "value": 2}, {"from": 18, "title": "Weight: 8", "to": 38, "value": 8}, {"from": 18, "title": "Weight: 35", "to": 39, "value": 35}, {"from": 18, "title": "Weight: 1", "to": 41, "value": 1}, {"from": 18, "title": "Weight: 19", "to": 44, "value": 19}, {"from": 18, "title": "Weight: 6", "to": 52, "value": 6}, {"from": 18, "title": "Weight: 2154", "to": 56, "value": 2154}, {"from": 18, "title": "Weight: 4", "to": 58, "value": 4}, {"from": 18, "title": "Weight: 2", "to": 59, "value": 2}, {"from": 18, "title": "Weight: 5", "to": 63, "value": 5}, {"from": 18, "title": "Weight: 2", "to": 70, "value": 2}, {"from": 19, "title": "Weight: 23", "to": 32, "value": 23}, {"from": 21, "title": "Weight: 3", "to": 24, "value": 3}, {"from": 21, "title": "Weight: 765", "to": 32, "value": 765}, {"from": 21, "title": "Weight: 3", "to": 34, "value": 3}, {"from": 21, "title": "Weight: 3", "to": 52, "value": 3}, {"from": 21, "title": "Weight: 3", "to": 55, "value": 3}, {"from": 21, "title": "Weight: 190", "to": 56, "value": 190}, {"from": 21, "title": "Weight: 1", "to": 58, "value": 1}, {"from": 21, "title": "Weight: 3", "to": 75, "value": 3}, {"from": 24, "title": "Weight: 36", "to": 32, "value": 36}, {"from": 24, "title": "Weight: 18", "to": 56, "value": 18}, {"from": 25, "title": "Weight: 13", "to": 32, "value": 13}, {"from": 25, "title": "Weight: 8", "to": 56, "value": 8}, {"from": 26, "title": "Weight: 1", "to": 56, "value": 1}, {"from": 28, "title": "Weight: 1", "to": 32, "value": 1}, {"from": 28, "title": "Weight: 3", "to": 52, "value": 3}, {"from": 28, "title": "Weight: 2", "to": 56, "value": 2}, {"from": 28, "title": "Weight: 7", "to": 58, "value": 7}, {"from": 31, "title": "Weight: 2", "to": 32, "value": 2}, {"from": 31, "title": "Weight: 3", "to": 56, "value": 3}, {"from": 32, "title": "Weight: 1", "to": 33, "value": 1}, {"from": 32, "title": "Weight: 11", "to": 34, "value": 11}, {"from": 32, "title": "Weight: 10", "to": 35, "value": 10}, {"from": 32, "title": "Weight: 22", "to": 39, "value": 22}, {"from": 32, "title": "Weight: 1", "to": 42, "value": 1}, {"from": 32, "title": "Weight: 4", "to": 43, "value": 4}, {"from": 32, "title": "Weight: 1", "to": 45, "value": 1}, {"from": 32, "title": "Weight: 1", "to": 46, "value": 1}, {"from": 32, "title": "Weight: 2", "to": 47, "value": 2}, {"from": 32, "title": "Weight: 2", "to": 51, "value": 2}, {"from": 32, "title": "Weight: 46", "to": 52, "value": 46}, {"from": 32, "title": "Weight: 1", "to": 53, "value": 1}, {"from": 32, "title": "Weight: 1914", "to": 56, "value": 1914}, {"from": 32, "title": "Weight: 26", "to": 58, "value": 26}, {"from": 32, "title": "Weight: 5", "to": 59, "value": 5}, {"from": 32, "title": "Weight: 1", "to": 60, "value": 1}, {"from": 32, "title": "Weight: 1", "to": 68, "value": 1}, {"from": 32, "title": "Weight: 11", "to": 70, "value": 11}, {"from": 32, "title": "Weight: 4", "to": 75, "value": 4}, {"from": 32, "title": "Weight: 1", "to": 77, "value": 1}, {"from": 32, "title": "Weight: 1", "to": 78, "value": 1}, {"from": 34, "title": "Weight: 2", "to": 56, "value": 2}, {"from": 35, "title": "Weight: 6", "to": 58, "value": 6}, {"from": 35, "title": "Weight: 1", "to": 70, "value": 1}, {"from": 39, "title": "Weight: 9", "to": 56, "value": 9}, {"from": 44, "title": "Weight: 2", "to": 56, "value": 2}, {"from": 52, "title": "Weight: 19", "to": 56, "value": 19}, {"from": 52, "title": "Weight: 1", "to": 58, "value": 1}, {"from": 54, "title": "Weight: 2", "to": 56, "value": 2}, {"from": 55, "title": "Weight: 2", "to": 56, "value": 2}, {"from": 56, "title": "Weight: 3", "to": 58, "value": 3}, {"from": 56, "title": "Weight: 2", "to": 60, "value": 2}, {"from": 56, "title": "Weight: 1", "to": 62, "value": 1}, {"from": 56, "title": "Weight: 13", "to": 70, "value": 13}, {"from": 56, "title": "Weight: 1", "to": 74, "value": 1}, {"from": 56, "title": "Weight: 1", "to": 75, "value": 1}]);
 
                   nodeColors = {};
